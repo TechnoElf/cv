@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 printpdf = "0.6.0"
 azul-text-layout = "0.0.4"
+image = "0.24.8"

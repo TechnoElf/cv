@@ -20,6 +20,10 @@ impl LayoutContext {
     pub fn new(buffer: Rc<RefCell<Vec<Vec<Symbol>>>>, view_size: (usize, usize), glimpse_origin: (usize, usize), glimpse_size: (usize, usize), fg_color: (f32, f32, f32), h1_color: (f32, f32, f32), h2_color: (f32, f32, f32), h3_color: (f32, f32, f32), h4_color: (f32, f32, f32)) -> Self {
         Self { buffer, view_size, glimpse_origin, glimpse_size, fg_color, h1_color, h2_color, h3_color, h4_color }
     }
+
+    pub fn view_size(&self) -> (usize, usize){
+        return self.glimpse_size;
+    }
 }
 
 impl LayoutContext {
@@ -242,6 +246,37 @@ impl LayoutContext {
         if x == 0 && y > 0 { y -= 1; }
         self.glimpse_origin.1 += y + 1;
         self.glimpse_size.1 = (self.glimpse_size.1 as isize - y as isize - 1).max(0) as usize;
+    }
+
+    pub fn img(&mut self, img: &Vec<f32>, w: usize, h: usize) {
+        for y in 0..h {
+            for x in 0..w {
+                if x < self.glimpse_size.0 && y < self.glimpse_size.1 {
+                    let pix = (y * w + x) * 3;
+
+                    let mut ch = ' ';
+                    let brightness = 0.299 * img[pix + 0] + 0.587 * img[pix + 1] + 0.114 * img[pix + 2];
+                    if brightness < 0.2 {
+                        ch = '.';
+                    } else if 0.2 <= brightness && brightness < 0.4 {
+                        ch = ':';
+                    } else if 0.4 <= brightness && brightness < 0.6 {
+                        ch = 'o';
+                    } else if 0.6 <= brightness && brightness < 0.8 {
+                        ch = '0';
+                    } else if 0.8 <= brightness  {
+                        ch = '@';
+                    }
+
+                    self.buffer.borrow_mut()[self.glimpse_origin.1 + y][self.glimpse_origin.0 + x] = Symbol {
+                        character: ch,
+                        color: (img[pix + 0], img[pix + 1], img[pix + 2]),
+                        bold: false,
+                        italic: false,
+                    };
+                }
+            }
+        }
     }
 }
 
